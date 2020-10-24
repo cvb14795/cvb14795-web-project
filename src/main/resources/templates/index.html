@@ -148,7 +148,8 @@
             $.get(url,
                 function(data){
                     $('#table').bootstrapTable('load', [data]);
-                });
+                }
+            );
             return false;
         };
         
