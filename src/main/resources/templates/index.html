@@ -10,21 +10,6 @@
     <!-- bootstrap CSS -->
     <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/bootstrap-table.min.css}">
-    <!-- 載入順序需固定 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js"></script>
-    <script th:src="@{/js/jquery-1.12.4.min.js}"></script>
-    <script th:src="@{/js/jquery.form.js}"></script>
-    <!-- <script th:src="@{/js/popper.min.js}"></script> -->
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script th:src="@{/js/bootstrap.min.js}"></script>
-    <script th:src="@{/js/bootstrap-table.min.js}"></script>
-    <script th:src="@{/js/bootstrap-table-locale-all.min.js}"></script>
-    <script>
-        // 預設隱藏名稱搜尋框，直到點擊任一選項後展開
-        $(document).ready( function(){
-            $("#name").hide();
-        });
-    </script>
 </head>
 
 <body>
@@ -73,7 +58,7 @@
                         <div class="panel panel-default">
                             <div class="panel-heading">點擊下列任一選項以輸入資料搜尋</div>
                             <div class="panel-body">
-                                <form action="/api/query" id="form" method="GET">
+                                <form id="form" onsubmit="return formSubmit();">
                                     <div class="form-group">
                                         <!-- ID單選框-->
                                         <div class="form-check">
@@ -95,7 +80,7 @@
                     </div>
                 </div>
                 <!-- 查詢結果之表格 -->
-                <div class="row ">
+                <div class="row">
                     <div class="col-md-12">
                         <div class="table-responsive">
                             <table 
@@ -122,63 +107,50 @@
             </div>
         </div>
     </div>
+
+    <!-- 載入順序需固定 -->
+    <script th:src="@{/js/jquery-1.12.4.min.js}"></script>
+    <script th:src="@{/js/jquery.form.js}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script th:src="@{/js/bootstrap.min.js}"></script>
+    <script th:src="@{/js/bootstrap-table.min.js}"></script>
+    <script th:src="@{/js/bootstrap-table-locale-all.min.js}"></script>
     <script>
-        $("#form").submit(function (e){
+        // 預設隱藏名稱搜尋框，直到點擊任一選項後展開
+        $("#name").hide();
+    </script>
+    <script>
+        $('#table').bootstrapTable({
+                locale: "zh-TW",
+                height: 450,
+                sortName: "", //依照哪個欄位排序	
+                sortOrder: "",
+                // 是否分頁
+                pagination: "true",
+                // 分頁提示位置
+                paginationVAlign: "both",
+                pageSize: 10, //預設一頁顯示幾筆
+                pageList: [10, 20, 50, 100], //一頁顯示幾筆的下拉清單
+                pageNumber: "1"
+            });
+
+    	//$("#table").bootstrapTable('destroy');
+        //$("#form").submit(function (e){
+        function formSubmit(){
             let $form = $("#form");
-            // 要查詢的欄位名稱
+            // 要查詢的欄位名稱(查id或查name)
             let queryCol = $("[name='searchMethod']:checked").val();
             let inputVal = $("#"+queryCol).val().trim();
-            let url = $form.attr("action") + "?" + queryCol + "=" + inputVal;
-            let method = $form.attr("method");
+            let url = "/api/query?" + queryCol + "=" + inputVal;
+            console.log("查詢: " + queryCol + "=" + inputVal);
             
-            $("#form").ajaxSubmit({
-                $("#table").bootstrapTable({
-                    locale: "zh-TW",
-                    height : 450,
-                    sortName:"", //依照哪個欄位排序	
-                    sortOrder:"",
-                    pageSize : 10, //預設一頁顯示幾筆
-                    pageList : [10, 20, 50, 100], //一頁顯示幾筆的下拉清單
-                    pageNumber:"1",
-                    ajax: function(params){
-                        $.ajax({
-                            type: method,
-                            url: url,
-                            success: function (data) {
-                                params.success({
-                                    "rows": [data]
-                                });
-                                $('#table').bootstrapTable('load', data);
-                            },
-                            error: function (er) {
-                                params.error(er);
-                            }
-                        });
-                    }
-                })
-            });
-            
-            // 阻止提交後頁面跳轉
-            //e.preventDefault()
+            $.get(url,
+                function(data){
+                    $('#table').bootstrapTable('load', [data]);
+                });
             return false;
-            /*
-            $('<tr>').append(
-                $('<td>').text(data.id),
-                $('<td>').text(data.name),
-                $('<td>').text(data.rentSpec),
-                $('<td>').text(moment(data.rentDate, 'MMMM DD YYYY, h:mm:ss a').format('MMMM DD YYYY, h:mm:ss a')),
-                $('<td>').text(data.phone)
-            ).appendTo("#table");
-            */
-            /*
-            console.log(msg);
-            alert("查詢結果:\n\nID: "+ msg.id +
-                "\nName: " + msg.name +
-                "\nrent_spec: " + msg.rentSpec +
-                "\nrent_date: " + moment(msg.rentDate, 'MMMM DD YYYY, h:mm:ss a').format('MMMM DD YYYY, h:mm:ss a') +
-                "\nphone: " + msg.phone);
-            */
-        });
+        };
         
         // 選中一項則隱藏另一項的輸入框
         $("#checkbox-name").click(function() {
@@ -193,9 +165,7 @@
             $("#name").val("");
             $("#name").hide();
         });
-
     </script>
-
 </body>
 
 </html>
